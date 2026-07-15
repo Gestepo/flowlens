@@ -31,7 +31,9 @@ FlowLens stores connection metadata and derived attribution, which can still rev
 
 ## Screenshots
 
-Public screenshots must use synthetic data and generic reserved example names and addresses. Do not publish screenshots containing real infrastructure, account names, hostnames, addresses, tokens, cookies, or traffic relationships. This repository intentionally does not include a real-environment screenshot.
+![FlowLens overview concept using synthetic traffic data](docs/images/flowlens-overview-concept.png)
+
+Concept view rendered from the real dashboard with synthetic data. It contains no production hostnames, addresses, accounts, or traffic records. Public screenshots must use synthetic data and generic reserved example names and addresses. Do not publish screenshots containing real infrastructure, account names, hostnames, addresses, tokens, cookies, or traffic relationships.
 
 ## Development and License
 

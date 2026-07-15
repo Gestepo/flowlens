@@ -694,6 +694,32 @@ func TestNativeOperationsDocumentation(t *testing.T) {
 	}
 }
 
+func TestPublicScreenshotUsesSyntheticData(t *testing.T) {
+	for _, path := range []string{
+		"../web/playwright.screenshot.config.ts",
+		"../web/screenshot/public-overview.spec.ts",
+		"../docs/images/flowlens-overview-concept.png",
+	} {
+		if _, err := os.Stat(path); err != nil {
+			t.Errorf("public screenshot deliverable is missing: %s", path)
+		}
+	}
+
+	readme := readFile(t, "../README.md")
+	for _, required := range []string{"docs/images/flowlens-overview-concept.png", "synthetic data"} {
+		if !strings.Contains(readme, required) {
+			t.Errorf("README must describe the synthetic public screenshot with %q", required)
+		}
+	}
+
+	spec := readFile(t, "../web/screenshot/public-overview.spec.ts")
+	for _, required := range []string{"example.com", "example.net", "203.0.113."} {
+		if !strings.Contains(spec, required) {
+			t.Errorf("public screenshot fixture must use reserved synthetic data %q", required)
+		}
+	}
+}
+
 func TestAgentServiceHasNoHostSpecificNPMPath(t *testing.T) {
 	service := readFile(t, "../deploy/flowlens-agent.service")
 	if strings.Contains(service, "/"+"root/") {
