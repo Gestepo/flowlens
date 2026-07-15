@@ -1,5 +1,7 @@
 # FlowLens
 
+[简体中文](README.zh-CN.md)
+
 FlowLens is a self-hosted Linux traffic observability service. A native Agent collects network-flow metadata and sends it to a native server, which stores it in PostgreSQL and serves a browser dashboard.
 
 ## What It Does

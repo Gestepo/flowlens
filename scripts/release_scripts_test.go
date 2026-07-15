@@ -720,6 +720,21 @@ func TestPublicScreenshotUsesSyntheticData(t *testing.T) {
 	}
 }
 
+func TestReadmesProvideBilingualNavigation(t *testing.T) {
+	english := readFile(t, "../README.md")
+	chinese := readFile(t, "../README.zh-CN.md")
+	for _, required := range []string{"[简体中文](README.zh-CN.md)", "docs/images/flowlens-overview-concept.png"} {
+		if !strings.Contains(english, required) {
+			t.Errorf("English README must contain %q", required)
+		}
+	}
+	for _, required := range []string{"[English](README.md)", "概念图", "合成数据", "不得发布包含真实基础设施"} {
+		if !strings.Contains(chinese, required) {
+			t.Errorf("Chinese README must contain %q", required)
+		}
+	}
+}
+
 func TestAgentServiceHasNoHostSpecificNPMPath(t *testing.T) {
 	service := readFile(t, "../deploy/flowlens-agent.service")
 	if strings.Contains(service, "/"+"root/") {
