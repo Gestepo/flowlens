@@ -735,6 +735,22 @@ func TestReadmesProvideBilingualNavigation(t *testing.T) {
 	}
 }
 
+func TestWebBundleIncludesVersionedFlowLensFavicon(t *testing.T) {
+	html := readFile(t, "../web/index.html")
+	for _, required := range []string{`rel="icon"`, `type="image/svg+xml"`, `href="/favicon.svg?v=1"`} {
+		if !strings.Contains(html, required) {
+			t.Errorf("web index must contain favicon attribute %q", required)
+		}
+	}
+
+	icon := readFile(t, "../web/public/favicon.svg")
+	for _, required := range []string{`viewBox="0 0 32 32"`, "#20312f", "#3e5a57", "#62d0a2", "M4 16"} {
+		if !strings.Contains(icon, required) {
+			t.Errorf("favicon must contain FlowLens brand fragment %q", required)
+		}
+	}
+}
+
 func TestAgentServiceHasNoHostSpecificNPMPath(t *testing.T) {
 	service := readFile(t, "../deploy/flowlens-agent.service")
 	if strings.Contains(service, "/"+"root/") {
