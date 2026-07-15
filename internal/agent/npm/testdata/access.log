@@ -1,0 +1,4 @@
+[14/Jul/2026:15:16:40 +0000] - 200 200 - GET https app.example.test "/api/items?token=secret-value" [Client 198.51.100.4] [Length 8437] [Gzip -] [Sent-to web] "ExampleAgent/1.0" "https://app.example.test/"
+[14/Jul/2026:15:17:40 +0000] - 502 502 - POST https api.example.test "/v1/jobs" [Client 203.0.113.8] [Length 157] [Gzip -] [Sent-to 172.18.0.3] "ExampleAgent/1.0" "-"
+[14/Jul/2026:15:18:40 +0000] - 204 204 - OPTIONS https ipv6.example.test "/" [Client 2001:db8::4] [Length 0] [Gzip -] [Sent-to 2001:db8::9] "ExampleAgent/1.0" "-"
+[14/Jul/2026:15:19:40 +0000] - 200 200 - GET https search.example.test "/search?q=\"quoted\"&key=discard-me" [Client 192.0.2.9] [Length 42] [Gzip -] [Sent-to search] "ExampleAgent/1.0" "-"

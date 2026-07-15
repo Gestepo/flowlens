@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: flowlens_ci
+          POSTGRES_PASSWORD: flowlens_ci
+          POSTGRES_DB: flowlens_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Run Go tests
+        run: go test ./...
+
+      - name: Run Go vet
+        run: go vet ./...
+
+      - name: Run PostgreSQL integration tests
+        env:
+          FLOWLENS_POSTGRES_ADMIN_URL: postgres://flowlens_ci:flowlens_ci@127.0.0.1:5432/postgres?sslmode=disable
+        run: sh scripts/ci-integration.sh
+
+      - name: Install frontend dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Run frontend tests
+        working-directory: web
+        run: npm test
+
+      - name: Build frontend
+        working-directory: web
+        run: npm run build
+
+      - name: Check shell scripts
+        run: |
+          sh -n scripts/*.sh
+          shellcheck scripts/*.sh
+
+      - name: Check publishable privacy boundary
+        run: sh scripts/privacy-check.sh
