@@ -36,6 +36,34 @@ Inspect failures with `journalctl -u flowlens-server.service`.
 2. Run `sudo scripts/install-agent.sh bin/flowlens-agent deploy/agent.env`.
 3. Verify `systemctl is-active flowlens-agent.service` reports `active`, then inspect collector state in the dashboard.
 
+## Install an Additional VPS Agent
+
+Use this on the additional Debian or Ubuntu VPS, not on the FlowLens server. Give
+each VPS a stable, unique node ID such as `hk-vps-1`. Replace the example public
+origin with your own FlowLens address:
+
+```sh
+curl -fsSLo /tmp/flowlens-agent-install.sh https://raw.githubusercontent.com/Gestepo/flowlens/main/scripts/install-agent-remote.sh && sudo sh /tmp/flowlens-agent-install.sh --node-id hk-vps-1 --endpoint https://monitor.example.com/api/v1/agent/batches; rm -f /tmp/flowlens-agent-install.sh
+```
+
+The installer asks for the Agent token already configured on the FlowLens server;
+the token is prompted privately and is never included in the copied command or
+shell history. It detects the default network interface, builds and installs the
+native Agent, and leaves Docker and Nginx Proxy Manager attribution disabled. A
+node appears in the dashboard automatically after its first successful report.
+
+To remove the Agent from that VPS later, run this only on that VPS:
+
+```sh
+curl -fsSLo /tmp/flowlens-agent-uninstall.sh https://raw.githubusercontent.com/Gestepo/flowlens/main/scripts/uninstall-agent-remote.sh && sudo sh /tmp/flowlens-agent-uninstall.sh --yes; rm -f /tmp/flowlens-agent-uninstall.sh
+```
+
+The explicit `--yes` command stops and removes only that VPS's Agent service,
+binary, Agent configuration, collector state, performance sysctl file, and
+dedicated system user. It does not remove the FlowLens server, PostgreSQL,
+Docker, reverse-proxy configuration, or historical traffic already stored by the
+server.
+
 `FLOWLENS_NPM_LOG_GLOBS=/data/logs/proxy-host-*_access.log` is a generic path inside the Agent's systemd namespace. The packaged unit does not assume where Nginx Proxy Manager stores logs. Add a `BindReadOnlyPaths` systemd drop-in that maps the actual host log directory to `/data/logs`, then restart the Agent. [attribution.md](attribution.md) shows the drop-in. Leave the glob empty when NPM log attribution is not used.
 
 Docker attribution is disabled by default. Enable `FLOWLENS_DOCKER_ATTRIBUTION=enabled` only when container ownership is required and the privilege has been reviewed. Enabling it grants the Agent Docker socket access; Docker group membership is effectively host-level privilege even though FlowLens performs inventory reads only.

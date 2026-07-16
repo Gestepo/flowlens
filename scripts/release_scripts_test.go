@@ -27,7 +27,7 @@ func TestAttributionVerifierUsesBrowserSessionCookie(t *testing.T) {
 }
 
 func TestOperationalScriptsDoNotRequireFlowLensContainers(t *testing.T) {
-	for _, name := range []string{"acceptance.sh", "backup.sh", "configure-deploy.sh", "restore.sh", "uninstall.sh", "verify-attribution.sh"} {
+	for _, name := range []string{"acceptance.sh", "backup.sh", "configure-deploy.sh", "install-agent-remote.sh", "restore.sh", "uninstall-agent-remote.sh", "uninstall.sh", "verify-attribution.sh"} {
 		contents := readScript(t, name)
 		for _, forbidden := range []*regexp.Regexp{
 			regexp.MustCompile(`docker[[:space:]]+compose`),
@@ -37,6 +37,20 @@ func TestOperationalScriptsDoNotRequireFlowLensContainers(t *testing.T) {
 			if forbidden.MatchString(contents) {
 				t.Errorf("%s contains a FlowLens runtime container deployment reference", name)
 			}
+		}
+	}
+}
+
+func TestRemoteAgentDocumentation(t *testing.T) {
+	contents := readFile(t, "../docs/operations/install.md")
+	for _, fragment := range []string{
+		"Install an Additional VPS Agent",
+		"raw.githubusercontent.com/Gestepo/flowlens/main/scripts/install-agent-remote.sh",
+		"--node-id", "https://monitor.example.com/api/v1/agent/batches",
+		"prompted privately", "uninstall-agent-remote.sh", "--yes",
+	} {
+		if !strings.Contains(contents, fragment) {
+			t.Errorf("install.md must contain %q", fragment)
 		}
 	}
 }
@@ -70,6 +84,45 @@ func TestNativeLifecycleScriptContracts(t *testing.T) {
 	for _, preserved := range []string{"/var/lib/flowlens", "/var/lib/flowlens-agent"} {
 		if strings.Contains(uninstall, "rm -rf "+preserved) {
 			t.Errorf("uninstall.sh must preserve %s by default", preserved)
+		}
+	}
+}
+
+func TestRemoteAgentInstallerContract(t *testing.T) {
+	contents := readScript(t, "install-agent-remote.sh")
+	for _, fragment := range []string{
+		"--node-id", "--endpoint", "stty -echo", "FLOWLENS_AGENT_TOKEN",
+		"https://", "debian|ubuntu", "uname -m",
+		"ip route show default", "FLOWLENS_DOCKER_ATTRIBUTION=disabled",
+		"FLOWLENS_NPM_LOG_GLOBS=", "go_version=1.26.4",
+		"scripts/install-agent.sh", "systemctl is-active --quiet flowlens-agent.service",
+	} {
+		if !strings.Contains(contents, fragment) {
+			t.Errorf("install-agent-remote.sh must contain %q", fragment)
+		}
+	}
+	if strings.Contains(contents, "--token") {
+		t.Fatal("install-agent-remote.sh must not accept the token in a command-line argument")
+	}
+}
+
+func TestRemoteAgentUninstallerContract(t *testing.T) {
+	contents := readScript(t, "uninstall-agent-remote.sh")
+	for _, fragment := range []string{
+		"--yes", "flowlens-agent.service", "/usr/local/bin/flowlens-agent",
+		"/etc/flowlens/agent.env", "/etc/sysctl.d/60-flowlens-perf.conf",
+		"/var/lib/flowlens-agent", "userdel flowlens-agent", "systemctl daemon-reload",
+	} {
+		if !strings.Contains(contents, fragment) {
+			t.Errorf("uninstall-agent-remote.sh must contain %q", fragment)
+		}
+	}
+	for _, forbidden := range []string{
+		"/etc/flowlens/server.env", "/usr/local/bin/flowlens-server",
+		"/opt/flowlens/web", "docker ", "psql ",
+	} {
+		if strings.Contains(contents, forbidden) {
+			t.Errorf("uninstall-agent-remote.sh must not affect %q", forbidden)
 		}
 	}
 }
