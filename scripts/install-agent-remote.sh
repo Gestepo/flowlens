@@ -44,10 +44,14 @@ while [ "$#" -gt 0 ]; do
 	esac
 done
 
-case "$node_id" in
-	''|*[!A-Za-z0-9_.:-]*) fail 'node ID must use only letters, digits, dot, underscore, colon, or hyphen' ;;
-esac
-[ "${#node_id}" -le 128 ] || fail 'node ID must be at most 128 characters'
+if [ -z "$node_id" ]; then
+	fail 'node ID cannot be empty'
+fi
+if printf '%s' "$node_id" | LC_ALL=C grep -q '[[:cntrl:]]'; then
+	fail 'node ID cannot contain control characters'
+fi
+node_id_bytes=$(LC_ALL=C printf '%s' "$node_id" | wc -c | tr -d '[:space:]')
+[ "$node_id_bytes" -le 128 ] || fail 'node ID must be at most 128 bytes'
 
 case "$endpoint" in
 	https://*/api/v1/agent/batches) ;;
@@ -122,8 +126,12 @@ git clone --depth 1 https://github.com/Gestepo/flowlens.git "$source_dir"
 (cd "$source_dir" && CGO_ENABLED=1 "$workspace/go/bin/go" build -o bin/flowlens-agent ./cmd/flowlens-agent)
 
 environment="$workspace/agent.env"
+environment_value() {
+	printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+node_id_environment=$(environment_value "$node_id")
 {
-	printf 'FLOWLENS_NODE_ID=%s\n' "$node_id"
+	printf 'FLOWLENS_NODE_ID="%s"\n' "$node_id_environment"
 	printf 'FLOWLENS_SERVER_ENDPOINT=%s\n' "$endpoint"
 	printf 'FLOWLENS_AGENT_TOKEN=%s\n' "$agent_token"
 	printf '%s\n' 'FLOWLENS_SPOOL_DIR=/var/lib/flowlens-agent/spool'

@@ -1,13 +1,20 @@
 import { Copy } from 'lucide-react'
 import { useState } from 'react'
 
-const nodeIDPattern = /^[A-Za-z0-9_.:-]{1,128}$/
 const installerURL = 'https://raw.githubusercontent.com/Gestepo/flowlens/main/scripts/install-agent-remote.sh'
 
+function validNodeID(value: string) {
+  return value !== '' && !/[\u0000-\u001f\u007f]/.test(value) && new TextEncoder().encode(value).length <= 128
+}
+
+function shellQuote(value: string) {
+  return `'${value.replaceAll("'", "'\"'\"'")}'`
+}
+
 export function buildAgentInstallCommand(nodeID: string, origin: string) {
-  if (!nodeIDPattern.test(nodeID)) return ''
+  if (!validNodeID(nodeID)) return ''
   const endpoint = `${origin}/api/v1/agent/batches`
-  return `curl -fsSLo /tmp/flowlens-agent-install.sh ${installerURL} && sudo sh /tmp/flowlens-agent-install.sh --node-id ${nodeID} --endpoint ${endpoint}; rm -f /tmp/flowlens-agent-install.sh`
+  return `curl -fsSLo /tmp/flowlens-agent-install.sh ${installerURL} && sudo sh /tmp/flowlens-agent-install.sh --node-id ${shellQuote(nodeID)} --endpoint ${shellQuote(endpoint)}; rm -f /tmp/flowlens-agent-install.sh`
 }
 
 export function AgentInstallCommand() {
@@ -34,7 +41,7 @@ export function AgentInstallCommand() {
       <label>节点 ID<input aria-label="节点 ID" value={nodeID} onChange={(event) => { setNodeID(event.target.value); setMessage('') }} placeholder="hk-vps-1" autoCapitalize="none" autoCorrect="off" spellCheck={false} /></label>
       <label>接收地址<input aria-label="Agent 接收地址" value={endpoint} readOnly /></label>
       <label className="agent-command-field">安装命令<textarea aria-label="VPS 安装命令" value={command} readOnly placeholder="输入节点 ID 后生成命令" /></label>
-      <div className="agent-install-actions"><span className="form-message" role="status">{nodeID && !valid ? '节点 ID 仅支持字母、数字、点、下划线、冒号和连字符，最长 128 位' : message}</span><button className="icon-command" type="button" onClick={() => void copyCommand()} disabled={!valid} aria-label="复制 VPS 安装命令" title="复制 VPS 安装命令"><Copy size={15} /></button></div>
+      <div className="agent-install-actions"><span className="form-message" role="status">{nodeID && !valid ? '节点 ID 最长 128 字节，可使用中文、空格和特殊符号；不支持换行或控制字符' : message}</span><button className="icon-command" type="button" onClick={() => void copyCommand()} disabled={!valid} aria-label="复制 VPS 安装命令" title="复制 VPS 安装命令"><Copy size={15} /></button></div>
     </div>
   </div>
 }

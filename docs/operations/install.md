@@ -39,8 +39,10 @@ Inspect failures with `journalctl -u flowlens-server.service`.
 ## Install an Additional VPS Agent
 
 Use this on the additional Debian or Ubuntu VPS, not on the FlowLens server. Give
-each VPS a stable, unique node ID such as `hk-vps-1`. Replace the example public
-origin with your own FlowLens address:
+each VPS a stable, unique node ID such as `hk-vps-1` or `Dmit | 中国`. Node IDs
+can include Chinese characters, spaces, and symbols, up to 128 bytes; line breaks
+and other control characters are not allowed. Replace the example public origin
+with your own FlowLens address:
 
 ```sh
 curl -fsSLo /tmp/flowlens-agent-install.sh https://raw.githubusercontent.com/Gestepo/flowlens/main/scripts/install-agent-remote.sh && sudo sh /tmp/flowlens-agent-install.sh --node-id hk-vps-1 --endpoint https://monitor.example.com/api/v1/agent/batches; rm -f /tmp/flowlens-agent-install.sh

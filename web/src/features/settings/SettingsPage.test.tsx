@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 
+import { buildAgentInstallCommand } from './AgentInstallCommand'
 import { SettingsPage } from './SettingsPage'
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
@@ -70,25 +71,32 @@ it('generates a token-free Agent install command from the current panel address'
   renderSettings()
   fireEvent.change(await screen.findByLabelText('节点 ID'), { target: { value: 'hk-vps-1' } })
   const command = screen.getByLabelText('VPS 安装命令') as HTMLTextAreaElement
-  expect(command.value).toContain('--node-id hk-vps-1')
+  expect(command.value).toContain("--node-id 'hk-vps-1'")
   expect(command.value).toContain(`${window.location.origin}/api/v1/agent/batches`)
   expect(command.value).not.toContain('FLOWLENS_AGENT_TOKEN')
   expect(screen.getByRole('button', { name: '复制 VPS 安装命令' })).toBeEnabled()
 })
 
-it('blocks invalid node IDs and reports clipboard results', async () => {
+it('supports human-readable node IDs and blocks control characters', async () => {
   const writeText = vi.fn().mockResolvedValue(undefined)
   Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
   vi.stubGlobal('fetch', settingsFetch())
   renderSettings()
   const nodeID = await screen.findByLabelText('节点 ID')
   const copy = screen.getByRole('button', { name: '复制 VPS 安装命令' })
-  fireEvent.change(nodeID, { target: { value: 'bad node id' } })
+  fireEvent.change(nodeID, { target: { value: 'Dmit | 中国' } })
+  expect(copy).toBeEnabled()
+  fireEvent.click(copy)
+  expect(await screen.findByText('安装命令已复制')).toBeInTheDocument()
+  expect(writeText).toHaveBeenCalledWith(expect.stringContaining("--node-id 'Dmit | 中国'"))
+
+  expect(buildAgentInstallCommand('bad\nnode', 'https://monitor.example.com')).toBe('')
+  fireEvent.change(nodeID, { target: { value: 'a'.repeat(129) } })
   expect(copy).toBeDisabled()
   fireEvent.change(nodeID, { target: { value: 'edge-vps-1' } })
   fireEvent.click(copy)
   expect(await screen.findByText('安装命令已复制')).toBeInTheDocument()
-  expect(writeText).toHaveBeenCalledWith(expect.stringContaining('--node-id edge-vps-1'))
+  expect(writeText).toHaveBeenCalledWith(expect.stringContaining("--node-id 'edge-vps-1'"))
 
   writeText.mockRejectedValueOnce(new Error('clipboard unavailable'))
   fireEvent.click(copy)

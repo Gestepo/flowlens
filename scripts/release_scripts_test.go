@@ -104,6 +104,14 @@ func TestRemoteAgentInstallerContract(t *testing.T) {
 	if strings.Contains(contents, "--token") {
 		t.Fatal("install-agent-remote.sh must not accept the token in a command-line argument")
 	}
+	for _, required := range []string{"grep -q '[[:cntrl:]]'", "wc -c", "FLOWLENS_NODE_ID=\"%s\""} {
+		if !strings.Contains(contents, required) {
+			t.Errorf("install-agent-remote.sh must safely support human-readable node IDs with %q", required)
+		}
+	}
+	if strings.Contains(contents, "*[!A-Za-z0-9_.:-]*) fail 'node ID") {
+		t.Error("install-agent-remote.sh must not reject spaces, Chinese characters, or pipe characters in node IDs")
+	}
 }
 
 func TestRemoteAgentUninstallerContract(t *testing.T) {
