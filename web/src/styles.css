@@ -228,6 +228,7 @@ button { color: inherit; }
 .settings-page { max-width: 1040px; }
 .settings-section { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 24px; }
 .settings-section > .section-heading { display: block; }
+.settings-node-content { min-width: 0; }
 .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 12px; }
 .form-grid label { display: grid; gap: 6px; color: #68757e; font-size: 10px; }
 .form-grid input { width: 100%; height: 34px; padding: 0 9px; border: 1px solid #ccd5da; border-radius: 4px; outline: 0; background: #fff; color: #263139; font-size: 11px; }
@@ -252,6 +253,12 @@ button { color: inherit; }
 .node-row strong { font-size: 11px; }.node-row small { margin-top: 2px; color: #8a959c; font-size: 9px; }
 .node-row i { color: #347c63; font-size: 9px; font-style: normal; }
 .node-row input { min-width: 0; height: 32px; padding: 0 8px; border: 1px solid #ccd5da; border-radius: 4px; }
+.agent-install-command { margin-top: 14px; padding: 13px; border: 1px solid #c9ddd4; border-left: 3px solid #3d9e78; border-radius: 4px; background: #f8fbfa; }
+.agent-install-heading h3 { margin: 0; color: #2d3c43; font-size: 11px; }.agent-install-heading p { margin: 4px 0 12px; color: #6f7d84; font-size: 9px; }
+.agent-install-fields { grid-template-columns: minmax(140px, .55fr) minmax(240px, 1fr); }.agent-install-fields .agent-command-field { grid-column: 1 / -1; }
+.agent-install-fields textarea { width: 100%; min-height: 66px; resize: vertical; padding: 8px 9px; border: 1px solid #ccd5da; border-radius: 4px; outline: 0; background: #fff; color: #36464f; font: 9px ui-monospace, SFMono-Regular, Menlo, monospace; line-height: 1.45; }
+.agent-install-fields textarea:focus { border-color: #3b9c79; box-shadow: 0 0 0 2px rgba(59, 156, 121, .12); }
+.agent-install-actions { display: flex; grid-column: 1 / -1; align-items: center; justify-content: space-between; gap: 10px; }.agent-install-actions .form-message { grid-column: auto; min-height: 0; }.icon-command:disabled { cursor: not-allowed; opacity: .45; }
 .settings-feedback { min-height: 32px; padding-top: 10px; color: #35765f; font-size: 10px; }
 .owner-detail-section { max-width: 900px; }
 .owner-trend { max-width: 900px; }
@@ -344,7 +351,7 @@ button { color: inherit; }
   .evidence-list { grid-template-columns: 1fr; }
   .delivery-list > div { padding: 9px 0; grid-template-columns: 1fr 1fr; }
   .settings-section { grid-template-columns: 1fr; gap: 12px; }
-  .form-grid, .compact-form, .webhook-form { grid-template-columns: 1fr; }
+  .form-grid, .compact-form, .webhook-form, .agent-install-fields { grid-template-columns: 1fr; }
   .rule-row { grid-template-columns: minmax(0, 1fr) 90px; }
   .node-row { padding: 9px 0; grid-template-columns: 28px minmax(0, 1fr) 34px; }
   .node-row i, .node-row input { grid-column: 2 / -1; }

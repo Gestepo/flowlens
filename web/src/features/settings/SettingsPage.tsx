@@ -3,6 +3,7 @@ import { Activity, Bell, Database, Save, Server, Settings, ShieldCheck, Webhook 
 import { useEffect, useState } from 'react'
 
 import { getNodes, getSettings, getWebhook, renameNode, updateRetention, updateRules, AlertRule } from '../operations/api'
+import { AgentInstallCommand } from './AgentInstallCommand'
 import { PasswordForm } from './PasswordForm'
 import { WebhookForm } from './WebhookForm'
 
@@ -16,7 +17,7 @@ export function SettingsPage() {
   async function saveRules() { await updateRules(rules); setDirty(false); setMessage('告警阈值已保存') }
   return <div className="detail-page settings-page"><div className="page-heading"><div><h1 className="icon-heading"><Settings size={20} />设置</h1><p>账户、节点和运行策略</p></div></div>
     <SettingsSection icon={<ShieldCheck size={17} />} title="管理员账户"><PasswordForm onDirty={setDirty} /></SettingsSection>
-    <SettingsSection icon={<Server size={17} />} title="节点">{nodes.data?.map((node) => <NodeRow key={node.id} node={node} save={(name) => rename.mutate({ id: node.id, name })} />)}</SettingsSection>
+    <SettingsSection icon={<Server size={17} />} title="节点"><div className="settings-node-content">{nodes.data?.map((node) => <NodeRow key={node.id} node={node} save={(name) => rename.mutate({ id: node.id, name })} />)}<AgentInstallCommand /></div></SettingsSection>
     <SettingsSection icon={<Database size={17} />} title="数据保留"><div className="form-grid compact-form"><label>明细保留天数<input aria-label="明细保留天数" type="number" min="1" max="30" value={detail} onChange={(event) => { setDetail(Number(event.target.value)); setDirty(true) }} /></label><label>日汇总保留月数<input type="number" min="1" max="12" value={months} onChange={(event) => { setMonths(Number(event.target.value)); setDirty(true) }} /></label><button className="secondary-command" type="button" onClick={() => void saveRetention()}><Save size={15} />保存保留策略</button></div></SettingsSection>
     <SettingsSection icon={<Bell size={17} />} title="告警阈值"><div className="rule-list">{rules.map((rule, index) => <div className="rule-row" key={rule.id}><label className="switch-row"><input type="checkbox" checked={rule.enabled} onChange={(event) => { const copy = [...rules]; copy[index] = { ...rule, enabled: event.target.checked }; setRules(copy); setDirty(true) }} /><span>{rule.name}</span></label><input aria-label={`${rule.name}阈值`} type="number" value={rule.multiplier || rule.threshold} onChange={(event) => { const value = Number(event.target.value); const copy = [...rules]; copy[index] = rule.multiplier ? { ...rule, multiplier: value } : { ...rule, threshold: value }; setRules(copy); setDirty(true) }} /></div>)}<button className="secondary-command" type="button" onClick={() => void saveRules()}><Save size={15} />保存告警阈值</button></div></SettingsSection>
     <SettingsSection icon={<Webhook size={17} />} title="Webhook">{webhook.data && <WebhookForm settings={webhook.data} onDirty={setDirty} />}</SettingsSection>

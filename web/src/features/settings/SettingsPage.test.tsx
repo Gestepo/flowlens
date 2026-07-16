@@ -65,5 +65,41 @@ it('submits password changes using the server route method', async () => {
   expect(passwordCall?.[1]).toMatchObject({ method: 'POST' })
 })
 
+it('generates a token-free Agent install command from the current panel address', async () => {
+  vi.stubGlobal('fetch', settingsFetch())
+  renderSettings()
+  fireEvent.change(await screen.findByLabelText('节点 ID'), { target: { value: 'hk-vps-1' } })
+  const command = screen.getByLabelText('VPS 安装命令') as HTMLTextAreaElement
+  expect(command.value).toContain('--node-id hk-vps-1')
+  expect(command.value).toContain(`${window.location.origin}/api/v1/agent/batches`)
+  expect(command.value).not.toContain('FLOWLENS_AGENT_TOKEN')
+  expect(screen.getByRole('button', { name: '复制 VPS 安装命令' })).toBeEnabled()
+})
+
+it('blocks invalid node IDs and reports clipboard results', async () => {
+  const writeText = vi.fn().mockResolvedValue(undefined)
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+  vi.stubGlobal('fetch', settingsFetch())
+  renderSettings()
+  const nodeID = await screen.findByLabelText('节点 ID')
+  const copy = screen.getByRole('button', { name: '复制 VPS 安装命令' })
+  fireEvent.change(nodeID, { target: { value: 'bad node id' } })
+  expect(copy).toBeDisabled()
+  fireEvent.change(nodeID, { target: { value: 'edge-vps-1' } })
+  fireEvent.click(copy)
+  expect(await screen.findByText('安装命令已复制')).toBeInTheDocument()
+  expect(writeText).toHaveBeenCalledWith(expect.stringContaining('--node-id edge-vps-1'))
+
+  writeText.mockRejectedValueOnce(new Error('clipboard unavailable'))
+  fireEvent.click(copy)
+  expect(await screen.findByText('复制失败，请选择命令后手动复制')).toBeInTheDocument()
+})
+
 function renderSettings() { const client = new QueryClient({ defaultOptions: { queries: { retry: false } } }); return render(<QueryClientProvider client={client}><MemoryRouter><SettingsPage /></MemoryRouter></QueryClientProvider>) }
 function response(value: unknown) { return Promise.resolve(new Response(JSON.stringify(value), { status: 200, headers: { 'Content-Type': 'application/json' } })) }
+function settingsFetch() { return vi.fn(async (input: RequestInfo | URL) => {
+  const url = String(input)
+  if (url.endsWith('/nodes')) return response({ items: [] })
+  if (url.endsWith('/settings/webhook')) return response({ enabled: false, endpoint: '', configured: false })
+  return response({ detail_retention_days: 30, aggregate_retention_months: 12, alert_rules: [] })
+}) }
