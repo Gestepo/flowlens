@@ -13,18 +13,20 @@ import (
 type RouterOption func(*routerConfig)
 
 type routerConfig struct {
-	overview    http.Handler
-	geoIPReload http.Handler
-	live        http.Handler
-	domains     http.Handler
-	owners      http.Handler
-	owner       http.Handler
-	flows       http.Handler
-	browserAuth *browserAuthConfig
-	webhookGet  http.Handler
-	webhookPut  http.Handler
-	webhookTest http.Handler
-	operations  *operationsConfig
+	overview         http.Handler
+	geoIPReload      http.Handler
+	live             http.Handler
+	domains          http.Handler
+	owners           http.Handler
+	owner            http.Handler
+	flows            http.Handler
+	browserAuth      *browserAuthConfig
+	webhookGet       http.Handler
+	webhookPut       http.Handler
+	webhookTest      http.Handler
+	enrollmentCreate http.Handler
+	enrollmentRedeem http.Handler
+	operations       *operationsConfig
 }
 
 type browserAuthConfig struct {
@@ -64,6 +66,10 @@ func WithWebhookSettings(get, put, test http.Handler) RouterOption {
 	return func(config *routerConfig) { config.webhookGet, config.webhookPut, config.webhookTest = get, put, test }
 }
 
+func WithEnrollment(create, redeem http.Handler) RouterOption {
+	return func(config *routerConfig) { config.enrollmentCreate, config.enrollmentRedeem = create, redeem }
+}
+
 func WithOperations(health, alerts, alert, settings, nodes, retention, alertSettings, node http.Handler) RouterOption {
 	return func(config *routerConfig) {
 		config.operations = &operationsConfig{health: health, alerts: alerts, alert: alert, settings: settings, nodes: nodes, retention: retention, alertSettings: alertSettings, node: node}
@@ -87,6 +93,9 @@ func NewAppRouter(ingest http.Handler, webDir string, options ...RouterOption) h
 		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	})
 	router.Method(http.MethodPost, "/api/v1/agent/batches", ingest)
+	if config.enrollmentRedeem != nil {
+		router.Method(http.MethodPost, "/api/v1/agent/enrollment", config.enrollmentRedeem)
+	}
 	if config.browserAuth != nil {
 		authentication := config.browserAuth
 		router.Method(http.MethodPost, "/api/v1/auth/bootstrap", authentication.bootstrap)
@@ -124,6 +133,9 @@ func NewAppRouter(ingest http.Handler, webDir string, options ...RouterOption) h
 			routes.Method(http.MethodPut, "/api/v1/settings/retention", operations.retention)
 			routes.Method(http.MethodPut, "/api/v1/settings/alerts", operations.alertSettings)
 			routes.Method(http.MethodPut, "/api/v1/nodes/{id}", operations.node)
+		}
+		if config.enrollmentCreate != nil {
+			routes.Method(http.MethodPost, "/api/v1/settings/agent-enrollment", config.enrollmentCreate)
 		}
 	}
 	if config.browserAuth != nil {

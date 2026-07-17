@@ -14,6 +14,7 @@ import (
 	"flowlens/internal/server/alerts"
 	"flowlens/internal/server/auth"
 	serverconfig "flowlens/internal/server/config"
+	"flowlens/internal/server/enrollment"
 	"flowlens/internal/server/geoip"
 	"flowlens/internal/server/httpapi"
 	"flowlens/internal/server/ingest"
@@ -67,6 +68,7 @@ func run(logger *slog.Logger) error {
 	}
 
 	ingestion := ingest.NewHandler(config.AgentToken, store.New(pool, store.WithGeoIP(geoResolver)))
+	enrollmentHandler := enrollment.New(config.AgentToken, time.Now)
 	overviewHandler := overview.NewHandler(overview.NewService(pool, time.Now))
 	geoReloadHandler := geoip.NewReloadHandler(config.AgentToken, config.GeoIPCountryPath, config.GeoIPASNPath, geoResolver)
 	trafficHandler := trafficquery.NewHandler(trafficquery.NewService(pool), time.Now)
@@ -98,6 +100,7 @@ func run(logger *slog.Logger) error {
 				http.HandlerFunc(trafficHandler.Owner), http.HandlerFunc(trafficHandler.Flows),
 			),
 			httpapi.WithWebhookSettings(http.HandlerFunc(webhookHandler.Get), http.HandlerFunc(webhookHandler.Put), http.HandlerFunc(webhookHandler.Test)),
+			httpapi.WithEnrollment(http.HandlerFunc(enrollmentHandler.Create), http.HandlerFunc(enrollmentHandler.Redeem)),
 			httpapi.WithOperations(
 				http.HandlerFunc(operationsHandler.Health), http.HandlerFunc(operationsHandler.Alerts), http.HandlerFunc(operationsHandler.Alert),
 				http.HandlerFunc(operationsHandler.Settings), http.HandlerFunc(operationsHandler.Nodes), http.HandlerFunc(operationsHandler.Retention),

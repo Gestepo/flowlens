@@ -18,6 +18,7 @@ fi
 node_id=
 endpoint=
 interface=
+enrollment_token=
 while [ "$#" -gt 0 ]; do
 	case "$1" in
 		--node-id)
@@ -33,6 +34,11 @@ while [ "$#" -gt 0 ]; do
 		--interface)
 			[ "$#" -ge 2 ] || usage
 			interface=$2
+			shift 2
+			;;
+		--enrollment-token)
+			[ "$#" -ge 2 ] || usage
+			enrollment_token=$2
 			shift 2
 			;;
 		-h|--help)
@@ -86,25 +92,23 @@ case "$(uname -m)" in
 	*) fail 'this installer supports amd64 and arm64 only' ;;
 esac
 
-if ! [ -r /dev/tty ] || ! [ -w /dev/tty ]; then
-	fail 'a terminal is required to enter the Agent token privately'
+if [ -n "$enrollment_token" ]; then
+	case "$enrollment_token" in *[!A-Za-z0-9_-]*|'') fail 'enrollment token is invalid' ;; esac
+else
+	if ! [ -r /dev/tty ] || ! [ -w /dev/tty ]; then
+		fail 'a terminal is required to enter the Agent token privately'
+	fi
+	restore_terminal() { stty echo </dev/tty 2>/dev/null || true; }
+	trap restore_terminal 0 1 2 3 15
+	printf '%s' 'FlowLens Agent token (input hidden): ' >/dev/tty
+	stty -echo </dev/tty
+	if ! IFS= read -r agent_token </dev/tty; then agent_token=; fi
+	restore_terminal
+	printf '\n' >/dev/tty
+	[ -n "$agent_token" ] || fail 'Agent token cannot be empty'
+	case "$agent_token" in *"
+"*) fail 'Agent token cannot contain a newline' ;; esac
 fi
-restore_terminal() {
-	stty echo </dev/tty 2>/dev/null || true
-}
-trap restore_terminal 0 1 2 3 15
-printf '%s' 'FlowLens Agent token (input hidden): ' >/dev/tty
-stty -echo </dev/tty
-if ! IFS= read -r agent_token </dev/tty; then
-	agent_token=
-fi
-restore_terminal
-printf '\n' >/dev/tty
-[ -n "$agent_token" ] || fail 'Agent token cannot be empty'
-case "$agent_token" in
-	*"
-"*) fail 'Agent token cannot contain a newline' ;;
-esac
 
 umask 077
 workspace=$(mktemp -d /tmp/flowlens-agent-install.XXXXXX)
@@ -114,7 +118,13 @@ cleanup() {
 trap cleanup 0
 
 apt-get update
-DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl git build-essential clang llvm libelf-dev zlib1g-dev pkg-config iproute2
+DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl git python3 build-essential clang llvm libelf-dev zlib1g-dev pkg-config iproute2
+
+if [ -n "$enrollment_token" ]; then
+	enrollment_url=${endpoint%/api/v1/agent/batches}/api/v1/agent/enrollment
+	enrollment_response=$(curl --fail --silent --show-error --proto '=https' --tlsv1.2 -H "Authorization: Bearer $enrollment_token" -X POST "$enrollment_url") || fail 'enrollment token is invalid, expired, or already used'
+	agent_token=$(printf '%s' "$enrollment_response" | python3 -c 'import json,sys; value=json.load(sys.stdin).get("agent_token", ""); assert isinstance(value, str) and value; print(value, end="")') || fail 'enrollment response is invalid'
+fi
 
 go_version=1.26.4
 go_archive="$workspace/go${go_version}.linux-${go_arch}.tar.gz"

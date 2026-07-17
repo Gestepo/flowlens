@@ -109,6 +109,11 @@ func TestRemoteAgentInstallerContract(t *testing.T) {
 			t.Errorf("install-agent-remote.sh must safely support human-readable node IDs with %q", required)
 		}
 	}
+	for _, required := range []string{"--enrollment-token", "/api/v1/agent/enrollment", "python3 -c", "python3 build-essential"} {
+		if !strings.Contains(contents, required) {
+			t.Errorf("install-agent-remote.sh must support one-time enrollment with %q", required)
+		}
+	}
 	if strings.Contains(contents, "*[!A-Za-z0-9_.:-]*) fail 'node ID") {
 		t.Error("install-agent-remote.sh must not reject spaces, Chinese characters, or pipe characters in node IDs")
 	}

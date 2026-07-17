@@ -66,15 +66,16 @@ it('submits password changes using the server route method', async () => {
   expect(passwordCall?.[1]).toMatchObject({ method: 'POST' })
 })
 
-it('generates a token-free Agent install command from the current panel address', async () => {
+it('generates a token-free one-time Agent install command from the current panel address', async () => {
   vi.stubGlobal('fetch', settingsFetch())
   renderSettings()
   fireEvent.change(await screen.findByLabelText('节点 ID'), { target: { value: 'hk-vps-1' } })
-  const command = screen.getByLabelText('VPS 安装命令') as HTMLTextAreaElement
-  expect(command.value).toContain("--node-id 'hk-vps-1'")
-  expect(command.value).toContain(`${window.location.origin}/api/v1/agent/batches`)
-  expect(command.value).not.toContain('FLOWLENS_AGENT_TOKEN')
-  expect(screen.getByRole('button', { name: '复制 VPS 安装命令' })).toBeEnabled()
+  const command = buildAgentInstallCommand('hk-vps-1', window.location.origin, 'one-time-ticket')
+  expect(command).toContain("--node-id 'hk-vps-1'")
+  expect(command).toContain(`${window.location.origin}/api/v1/agent/batches`)
+  expect(command).toContain("--enrollment-token 'one-time-ticket'")
+  expect(command).not.toContain('FLOWLENS_AGENT_TOKEN')
+  expect(screen.getByRole('button', { name: '生成并复制 VPS 安装命令' })).toBeEnabled()
 })
 
 it('supports human-readable node IDs and blocks control characters', async () => {
@@ -83,19 +84,20 @@ it('supports human-readable node IDs and blocks control characters', async () =>
   vi.stubGlobal('fetch', settingsFetch())
   renderSettings()
   const nodeID = await screen.findByLabelText('节点 ID')
-  const copy = screen.getByRole('button', { name: '复制 VPS 安装命令' })
+  const copy = screen.getByRole('button', { name: '生成并复制 VPS 安装命令' })
   fireEvent.change(nodeID, { target: { value: 'Dmit | 中国' } })
   expect(copy).toBeEnabled()
   fireEvent.click(copy)
-  expect(await screen.findByText('安装命令已复制')).toBeInTheDocument()
+  expect(await screen.findByText('一次性安装命令已复制，10 分钟内使用一次')).toBeInTheDocument()
   expect(writeText).toHaveBeenCalledWith(expect.stringContaining("--node-id 'Dmit | 中国'"))
+  expect(writeText).toHaveBeenCalledWith(expect.stringContaining("--enrollment-token 'test-enrollment'"))
 
-  expect(buildAgentInstallCommand('bad\nnode', 'https://monitor.example.com')).toBe('')
+  expect(buildAgentInstallCommand('bad\nnode', 'https://monitor.example.com', 'test-enrollment')).toBe('')
   fireEvent.change(nodeID, { target: { value: 'a'.repeat(129) } })
   expect(copy).toBeDisabled()
   fireEvent.change(nodeID, { target: { value: 'edge-vps-1' } })
   fireEvent.click(copy)
-  expect(await screen.findByText('安装命令已复制')).toBeInTheDocument()
+  expect(await screen.findByText('一次性安装命令已复制，10 分钟内使用一次')).toBeInTheDocument()
   expect(writeText).toHaveBeenCalledWith(expect.stringContaining("--node-id 'edge-vps-1'"))
 
   writeText.mockRejectedValueOnce(new Error('clipboard unavailable'))
@@ -109,5 +111,6 @@ function settingsFetch() { return vi.fn(async (input: RequestInfo | URL) => {
   const url = String(input)
   if (url.endsWith('/nodes')) return response({ items: [] })
   if (url.endsWith('/settings/webhook')) return response({ enabled: false, endpoint: '', configured: false })
+  if (url.endsWith('/settings/agent-enrollment')) return response({ enrollment_token: 'test-enrollment', expires_at: new Date().toISOString() })
   return response({ detail_retention_days: 30, aggregate_retention_months: 12, alert_rules: [] })
 }) }
