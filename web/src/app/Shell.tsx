@@ -1,6 +1,7 @@
-import { Activity, AudioWaveform, Bell, Boxes, Gauge, Globe2, LayoutDashboard, LogOut, Route, Server, Settings } from 'lucide-react'
+import { Activity, Bell, Boxes, Gauge, Globe2, LayoutDashboard, LogOut, Route, Server, Settings } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
+import { BrandMark } from '../components/BrandMark'
 import { logout } from '../features/auth/api'
 
 interface ShellProps {
@@ -25,7 +26,7 @@ export function Shell({ nodeID, nodes, onNodeChange, children }: ShellProps) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand"><span className="brand-mark"><AudioWaveform size={17} /></span><strong>FlowLens</strong></div>
+        <div className="brand"><BrandMark className="brand-mark" size={29} /><strong>FlowLens</strong></div>
         <div className="node-summary"><span>当前节点</span><strong><i className={current.status} />{current.name}</strong></div>
         <p className="nav-label">监控</p>
         <nav className="side-nav" aria-label="主导航">

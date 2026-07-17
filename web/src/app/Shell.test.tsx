@@ -10,6 +10,7 @@ it('renders real navigation links and marks the current route', () => {
   render(<MemoryRouter initialEntries={['/domains']}><Shell nodeID="flowlens-node-1"><div>page content</div></Shell></MemoryRouter>)
 
   expect(screen.getByText('FlowLens')).toBeInTheDocument()
+  expect(screen.getByTestId('flowlens-brand-mark')).toHaveAttribute('viewBox', '0 0 32 32')
   expect(screen.getAllByText('flowlens-node-1').length).toBeGreaterThan(0)
   for (const label of ['概览', '实时流量', '域名分析', '容器与进程', '连接走向', '异常与告警']) {
     expect(screen.getAllByRole('link', { name: label }).length).toBeGreaterThan(0)

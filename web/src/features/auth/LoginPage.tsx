@@ -1,6 +1,7 @@
-import { AudioWaveform, Eye, EyeOff, LogIn } from 'lucide-react'
+import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { FormEvent, useState } from 'react'
 
+import { BrandMark } from '../../components/BrandMark'
 import { APIError, BrowserSession, login } from './api'
 
 export function LoginPage({ onAuthenticated }: { onAuthenticated: (session: BrowserSession) => void }) {
@@ -32,7 +33,7 @@ export function LoginPage({ onAuthenticated }: { onAuthenticated: (session: Brow
 
   return <main className="login-page">
     <section className="login-tool" aria-labelledby="login-title">
-      <div className="login-brand"><span className="brand-symbol"><AudioWaveform size={19} /></span><strong>FlowLens</strong></div>
+      <div className="login-brand"><BrandMark className="brand-symbol" size={32} /><strong>FlowLens</strong></div>
       <div className="login-heading"><h1 id="login-title">登录 FlowLens</h1><span>管理员访问</span></div>
       <form onSubmit={submit}>
         <label htmlFor="login-username">用户名</label>

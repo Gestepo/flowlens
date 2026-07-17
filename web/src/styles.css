@@ -15,7 +15,7 @@ button { color: inherit; }
 .app-shell { min-height: 100vh; display: grid; grid-template-columns: 224px minmax(0, 1fr); }
 .sidebar { position: sticky; top: 0; height: 100vh; padding: 22px 14px 18px; display: flex; flex-direction: column; color: #acb9c1; background: #17222b; }
 .brand { display: flex; align-items: center; gap: 10px; min-height: 32px; padding: 0 10px 22px; color: #fff; font-size: 18px; }
-.brand-mark { width: 29px; height: 29px; display: grid; place-items: center; border: 1px solid #3e5a57; border-radius: 6px; background: #20312f; color: #62d0a2; }
+.brand-mark { display: block; flex: 0 0 29px; }
 .node-summary { margin: 0 4px 22px; padding: 10px 11px; border: 1px solid #35434d; border-radius: 6px; background: #202d36; }
 .node-summary > span { display: block; margin-bottom: 4px; color: #82939e; font-size: 11px; }
 .node-summary strong { display: flex; align-items: center; gap: 7px; overflow: hidden; color: #e9eef1; font-size: 12px; white-space: nowrap; text-overflow: ellipsis; }
@@ -109,7 +109,7 @@ button { color: inherit; }
 .login-tool { width: min(380px, 100%); overflow: hidden; border: 1px solid #ccd4d9; border-radius: 6px; background: #fff; box-shadow: 0 10px 30px rgba(31, 42, 49, .08); }
 .login-brand { min-height: 62px; padding: 0 22px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e1e6e9; color: #1e2b33; }
 .login-brand strong { font-size: 16px; }
-.brand-symbol { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 6px; background: #1c2a33; color: #62d0a2; }
+.brand-symbol { display: block; flex: 0 0 32px; }
 .login-heading { padding: 24px 22px 16px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .login-heading h1 { margin: 0; font-size: 18px; }
 .login-heading span { color: #849098; font-size: 10px; }
